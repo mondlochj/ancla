@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Log - Ancla Capital{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Audit Log</h1>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <form method="GET" style="display: flex; gap: 10px; align-items: center;">
+            <select name="entity_type" class="form-control" style="width: 150px;">
+                <option value="">All Entities</option>
+                <option value="Loan" {{ 'selected' if entity_type == 'Loan' }}>Loan</option>
+                <option value="Borrower" {{ 'selected' if entity_type == 'Borrower' }}>Borrower</option>
+                <option value="Property" {{ 'selected' if entity_type == 'Property' }}>Property</option>
+                <option value="Payment" {{ 'selected' if entity_type == 'Payment' }}>Payment</option>
+                <option value="Document" {{ 'selected' if entity_type == 'Document' }}>Document</option>
+                <option value="User" {{ 'selected' if entity_type == 'User' }}>User</option>
+            </select>
+            <select name="action" class="form-control" style="width: 150px;">
+                <option value="">All Actions</option>
+                <option value="created" {{ 'selected' if action == 'created' }}>Created</option>
+                <option value="updated" {{ 'selected' if action == 'updated' }}>Updated</option>
+                <option value="approved" {{ 'selected' if action == 'approved' }}>Approved</option>
+                <option value="activated" {{ 'selected' if action == 'activated' }}>Activated</option>
+                <option value="verified" {{ 'selected' if action == 'verified' }}>Verified</option>
+            </select>
+            <button type="submit" class="btn btn-secondary">Filter</button>
+        </form>
+    </div>
+    <div class="card-body">
+        {% if logs.items %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Entity</th>
+                        <th>Action</th>
+                        <th>User</th>
+                        <th>IP Address</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs.items %}
+                    <tr>
+                        <td>{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        <td>{{ log.entity_type }}</td>
+                        <td>{{ log.action }}</td>
+                        <td>{{ log.user.email if log.user else 'System' }}</td>
+                        <td>{{ log.ip_address or '-' }}</td>
+                        <td>
+                            {% if log.new_values %}
+                            <small>{{ log.new_values | tojson | truncate(50) }}</small>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if logs.pages > 1 %}
+        <div class="pagination">
+            {% if logs.has_prev %}
+            <a href="{{ url_for('admin.audit_log', page=logs.prev_num, entity_type=entity_type, action=action) }}">Previous</a>
+            {% endif %}
+            {% for page_num in logs.iter_pages() %}
+                {% if page_num %}
+                    <a href="{{ url_for('admin.audit_log', page=page_num, entity_type=entity_type, action=action) }}"
+                       class="{{ 'active' if page_num == logs.page }}">{{ page_num }}</a>
+                {% else %}
+                    <span>...</span>
+                {% endif %}
+            {% endfor %}
+            {% if logs.has_next %}
+            <a href="{{ url_for('admin.audit_log', page=logs.next_num, entity_type=entity_type, action=action) }}">Next</a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="empty-state">
+            <h3>No audit logs found</h3>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

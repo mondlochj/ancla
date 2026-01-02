@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Borrowers - Ancla Capital{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Borrowers</h1>
+    <a href="{{ url_for('borrowers.create') }}" class="btn btn-primary">Add Borrower</a>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <form method="GET" style="display: flex; gap: 10px; align-items: center;">
+            <input type="text" name="search" class="form-control" style="width: 250px;"
+                   placeholder="Search name, DPI, phone..." value="{{ search }}">
+            <select name="status" class="form-control" style="width: 150px;">
+                <option value="">All Status</option>
+                <option value="Pending" {{ 'selected' if status_filter == 'Pending' }}>Pending</option>
+                <option value="InProgress" {{ 'selected' if status_filter == 'InProgress' }}>In Progress</option>
+                <option value="Verified" {{ 'selected' if status_filter == 'Verified' }}>Verified</option>
+                <option value="Rejected" {{ 'selected' if status_filter == 'Rejected' }}>Rejected</option>
+            </select>
+            <button type="submit" class="btn btn-secondary">Filter</button>
+        </form>
+    </div>
+    <div class="card-body">
+        {% if borrowers.items %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>DPI</th>
+                        <th>Phone</th>
+                        <th>Department</th>
+                        <th>Status</th>
+                        <th>Risk</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for borrower in borrowers.items %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('borrowers.view', id=borrower.id) }}">
+                                {{ borrower.full_name }}
+                            </a>
+                        </td>
+                        <td>{{ borrower.masked_dpi }}</td>
+                        <td>{{ borrower.phone }}</td>
+                        <td>{{ borrower.department or '-' }}</td>
+                        <td>
+                            <span class="status-badge status-{{ borrower.verification_status|lower }}">
+                                {{ borrower.verification_status }}
+                            </span>
+                        </td>
+                        <td>{{ borrower.risk_tier }}</td>
+                        <td>
+                            <div class="actions">
+                                <a href="{{ url_for('borrowers.view', id=borrower.id) }}" class="btn btn-sm btn-secondary">View</a>
+                                <a href="{{ url_for('borrowers.edit', id=borrower.id) }}" class="btn btn-sm btn-secondary">Edit</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if borrowers.pages > 1 %}
+        <div class="pagination">
+            {% if borrowers.has_prev %}
+            <a href="{{ url_for('borrowers.index', page=borrowers.prev_num, status=status_filter, search=search) }}">Previous</a>
+            {% endif %}
+
+            {% for page_num in borrowers.iter_pages() %}
+                {% if page_num %}
+                    <a href="{{ url_for('borrowers.index', page=page_num, status=status_filter, search=search) }}"
+                       class="{{ 'active' if page_num == borrowers.page }}">{{ page_num }}</a>
+                {% else %}
+                    <span>...</span>
+                {% endif %}
+            {% endfor %}
+
+            {% if borrowers.has_next %}
+            <a href="{{ url_for('borrowers.index', page=borrowers.next_num, status=status_filter, search=search) }}">Next</a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="empty-state">
+            <h3>No borrowers found</h3>
+            <p>Add a new borrower to get started.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

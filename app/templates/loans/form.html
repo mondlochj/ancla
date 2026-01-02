@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Ancla Capital{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ title }}</h1>
+</div>
+
+{% if borrower %}
+<div class="alert alert-info">
+    <strong>Borrower:</strong> {{ borrower.full_name }} |
+    <strong>Risk Tier:</strong> {{ borrower.risk_tier }}
+</div>
+{% endif %}
+
+{% if property %}
+<div class="alert alert-info">
+    <strong>Property:</strong> {{ property.registry_number }} |
+    <strong>Value:</strong> {{ "Q{:,.2f}".format(property.market_value) }} |
+    <strong>Location:</strong> {{ property.municipality }}, {{ property.department }}
+</div>
+{% endif %}
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST">
+            {{ form.hidden_tag() }}
+
+            {% if not property and available_properties %}
+            <div class="form-group">
+                <label>Select Property</label>
+                <select name="property_select" class="form-control" onchange="window.location.href='{{ url_for('loans.create', borrower_id=borrower.id) }}&property_id=' + this.value">
+                    <option value="">Select a verified property...</option>
+                    {% for prop in available_properties %}
+                    <option value="{{ prop.id }}">
+                        {{ prop.registry_number }} - {{ prop.property_type }} - {{ "Q{:,.2f}".format(prop.market_value) }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+
+            <div class="form-row">
+                <div class="form-group">
+                    {{ form.product_id.label }}
+                    {{ form.product_id(class="form-control") }}
+                </div>
+
+                <div class="form-group">
+                    {{ form.loan_amount.label }}
+                    {{ form.loan_amount(class="form-control" + (" error" if form.loan_amount.errors else "")) }}
+                    {% if property %}
+                    <span class="form-text">Max 40% LTV = {{ "Q{:,.2f}".format((property.market_value * 40 / 100)|float) }}</span>
+                    {% endif %}
+                    {% for error in form.loan_amount.errors %}
+                    <span class="field-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    {{ form.term_months.label }}
+                    {{ form.term_months(class="form-control" + (" error" if form.term_months.errors else "")) }}
+                    <span class="form-text">Typically 3-6 months</span>
+                    {% for error in form.term_months.errors %}
+                    <span class="field-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <div class="form-group">
+                    {{ form.interest_rate.label }}
+                    {{ form.interest_rate(class="form-control" + (" error" if form.interest_rate.errors else ""), step="0.01") }}
+                    <span class="form-text">Monthly rate (e.g., 0.10 = 10%)</span>
+                    {% for error in form.interest_rate.errors %}
+                    <span class="field-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            {% if property %}
+            <div class="card mt-4 mb-4">
+                <div class="card-header">Loan Calculation Preview</div>
+                <div class="card-body">
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">Property Value</div>
+                            <div class="detail-value" id="prop-value">{{ "Q{:,.2f}".format(property.market_value) }}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Max Loan (40% LTV)</div>
+                            <div class="detail-value" id="max-loan">{{ "Q{:,.2f}".format((property.market_value * 40 / 100)|float) }}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Monthly Interest</div>
+                            <div class="detail-value" id="monthly-int">-</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Total Repayment</div>
+                            <div class="detail-value" id="total-repay">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="actions">
+                {% if property %}
+                <button type="submit" class="btn btn-primary">Create Loan</button>
+                {% else %}
+                <button type="submit" class="btn btn-primary" disabled>Select a property first</button>
+                {% endif %}
+                <a href="{{ url_for('borrowers.view', id=borrower.id) if borrower else url_for('loans.index') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const amountInput = document.querySelector('input[name="loan_amount"]');
+    const rateInput = document.querySelector('input[name="interest_rate"]');
+    const termInput = document.querySelector('input[name="term_months"]');
+
+    function updateCalc() {
+        const amount = parseFloat(amountInput.value) || 0;
+        const rate = parseFloat(rateInput.value) || 0;
+        const term = parseInt(termInput.value) || 0;
+
+        const monthlyInt = amount * rate;
+        const totalRepay = amount + (monthlyInt * term);
+
+        document.getElementById('monthly-int').textContent = 'Q' + monthlyInt.toLocaleString('en-US', {minimumFractionDigits: 2});
+        document.getElementById('total-repay').textContent = 'Q' + totalRepay.toLocaleString('en-US', {minimumFractionDigits: 2});
+    }
+
+    if (amountInput && rateInput && termInput) {
+        amountInput.addEventListener('input', updateCalc);
+        rateInput.addEventListener('input', updateCalc);
+        termInput.addEventListener('input', updateCalc);
+        updateCalc();
+    }
+});
+</script>
+{% endblock %}

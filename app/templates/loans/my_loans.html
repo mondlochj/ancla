@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}My Loans - Ancla Capital{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>My Loans</h1>
+</div>
+
+{% if loans %}
+<div class="card">
+    <div class="card-body">
+        {% for loan in loans %}
+        <div class="card mb-4" style="border: 1px solid var(--gray-200);">
+            <div class="card-header">
+                <span>{{ loan.loan_number }}</span>
+                <span class="status-badge status-{{ loan.status|lower|replace('_', '-') }}">
+                    {{ loan.status }}
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Loan Amount</h3>
+                        <div class="value">{{ "Q{:,.2f}".format(loan.loan_amount) }}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Monthly Payment</h3>
+                        <div class="value">{{ "Q{:,.2f}".format(loan.monthly_interest) }}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Term</h3>
+                        <div class="value">{{ loan.term_months }} months</div>
+                    </div>
+                    {% if loan.maturity_date %}
+                    <div class="stat-card">
+                        <h3>Maturity Date</h3>
+                        <div class="value">{{ loan.maturity_date.strftime('%Y-%m-%d') }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if loan.schedule.count() > 0 %}
+                <h4 class="mt-4">Upcoming Payments</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Due Date</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sched in loan.schedule.filter_by(is_paid=False).limit(3) %}
+                        <tr>
+                            <td>{{ sched.due_date.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ "Q{:,.2f}".format(sched.total_due) }}</td>
+                            <td>
+                                {% if sched.is_overdue %}
+                                <span class="status-badge status-defaulted">Overdue</span>
+                                {% else %}
+                                <span class="status-badge status-pending">Pending</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% endif %}
+
+                <a href="{{ url_for('loans.borrower_loan_view', id=loan.id) }}" class="btn btn-primary mt-4">View Details & Documents</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body">
+        <div class="empty-state">
+            <h3>Welcome to Ancla Capital</h3>
+            <p>You don't have any active loans at this time.</p>
+            <p style="margin-top: 15px; color: var(--gray-500);">
+                To apply for a land-backed loan, please contact our office or speak with a credit officer.
+            </p>
+            <p style="margin-top: 10px; color: var(--gray-500);">
+                <strong>Phone:</strong> +502 XXXX-XXXX<br>
+                <strong>Email:</strong> info@ancla.gt
+            </p>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

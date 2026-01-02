@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Ancla Capital{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    {% if current_user.is_authenticated %}
+    <nav class="navbar">
+        <div class="nav-brand">
+            {% if current_user.role.name == 'Borrower' %}
+            <a href="{{ url_for('loans.my_loans') }}" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit;">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="Ancla Capital" style="height: 40px;">
+                <span style="font-weight: 600; font-size: 1.2rem;">Ancla Capital</span>
+            </a>
+            {% else %}
+            <a href="{{ url_for('admin.dashboard') }}" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit;">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="Ancla Capital" style="height: 40px;">
+                <span style="font-weight: 600; font-size: 1.2rem;">Ancla Capital</span>
+            </a>
+            {% endif %}
+        </div>
+        <ul class="nav-menu">
+            {% if current_user.role.name != 'Borrower' %}
+            <li><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('borrowers.index') }}">Borrowers</a></li>
+            <li><a href="{{ url_for('collateral.index') }}">Properties</a></li>
+            <li><a href="{{ url_for('loans.index') }}">Loans</a></li>
+            <li><a href="{{ url_for('payments.index') }}">Payments</a></li>
+            {% if current_user.role.name in ['Admin', 'Collections'] %}
+            <li><a href="{{ url_for('collections.index') }}">Collections</a></li>
+            {% endif %}
+            {% else %}
+            <li><a href="{{ url_for('loans.my_loans') }}">My Loans</a></li>
+            {% endif %}
+        </ul>
+        <div class="nav-user">
+            <span>{{ current_user.full_name }}</span>
+            <span class="role-badge">{{ current_user.role.name }}</span>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-sm">Logout</a>
+        </div>
+    </nav>
+    {% endif %}
+
+    <main class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                    {{ message }}
+                    <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <p>&copy; {{ now().year if now is defined else 2024 }} Ancla Capital, S.A. - Guatemala</p>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

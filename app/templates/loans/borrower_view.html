@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block title %}Loan {{ loan.loan_number }} - Ancla Capital{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Loan: {{ loan.loan_number }}</h1>
+    <span class="status-badge status-{{ loan.status|lower|replace('_', '-') }}" style="font-size: 16px; padding: 8px 16px;">
+        {{ loan.status }}
+    </span>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>Loan Amount</h3>
+        <div class="value">{{ "Q{:,.2f}".format(loan.loan_amount) }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Monthly Interest</h3>
+        <div class="value">{{ "Q{:,.2f}".format(loan.monthly_interest) }}</div>
+        <div class="change">{{ "{:.1%}".format(loan.interest_rate) }} monthly</div>
+    </div>
+    <div class="stat-card">
+        <h3>Term</h3>
+        <div class="value">{{ loan.term_months }} months</div>
+        {% if loan.maturity_date %}
+        <div class="change">Matures: {{ loan.maturity_date.strftime('%Y-%m-%d') }}</div>
+        {% endif %}
+    </div>
+    <div class="stat-card">
+        <h3>Status</h3>
+        <div class="value">{{ loan.status }}</div>
+    </div>
+</div>
+
+<div class="detail-grid">
+    <div class="card">
+        <div class="card-header">Loan Details</div>
+        <div class="card-body">
+            <div class="detail-item">
+                <div class="detail-label">Product</div>
+                <div class="detail-value">{{ loan.product.name }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Application Date</div>
+                <div class="detail-value">{{ loan.application_date.strftime('%Y-%m-%d') if loan.application_date else '-' }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Disbursement Date</div>
+                <div class="detail-value">{{ loan.disbursement_date.strftime('%Y-%m-%d') if loan.disbursement_date else '-' }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Maturity Date</div>
+                <div class="detail-value">{{ loan.maturity_date.strftime('%Y-%m-%d') if loan.maturity_date else '-' }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Collateral Property</div>
+        <div class="card-body">
+            <div class="detail-item">
+                <div class="detail-label">Registry #</div>
+                <div class="detail-value">{{ loan.collateral.registry_number }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Type</div>
+                <div class="detail-value">{{ loan.collateral.property_type }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Location</div>
+                <div class="detail-value">{{ loan.collateral.municipality }}, {{ loan.collateral.department }}</div>
+            </div>
+        </div>
+    </div>
+
+    {% if summary %}
+    <div class="card">
+        <div class="card-header">Payment Summary</div>
+        <div class="card-body">
+            <div class="detail-item">
+                <div class="detail-label">Outstanding Principal</div>
+                <div class="detail-value">{{ "Q{:,.2f}".format(summary.outstanding_principal) }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Outstanding Interest</div>
+                <div class="detail-value">{{ "Q{:,.2f}".format(summary.outstanding_interest) }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Paid Interest</div>
+                <div class="detail-value">{{ "Q{:,.2f}".format(summary.paid_interest) }}</div>
+            </div>
+            {% if loan.days_past_due > 0 %}
+            <div class="detail-item">
+                <div class="detail-label">Days Past Due</div>
+                <div class="detail-value" style="color: var(--danger-color);">{{ loan.days_past_due }} days</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Required Documents -->
+{% if loan.status in ['Draft', 'UnderReview', 'Approved'] %}
+<div class="card mt-4">
+    <div class="card-header">
+        <span>Required Documents</span>
+        <a href="{{ url_for('legal.upload', loan_id=loan.id) }}" class="btn btn-sm btn-primary">Upload Document</a>
+    </div>
+    <div class="card-body">
+        <p style="margin-bottom: 15px; color: var(--text-secondary);">
+            Please upload the required documents for your loan application.
+        </p>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 40px;"></th>
+                    <th>Document</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in loan.get_document_checklist() %}
+                <tr>
+                    <td style="text-align: center; font-size: 1.2em;">
+                        {% if item.is_complete %}
+                        <span style="color: var(--success-color);">&#10003;</span>
+                        {% else %}
+                        <span style="color: var(--text-muted);">&#9675;</span>
+                        {% endif %}
+                    </td>
+                    <td><strong>{{ item.name }}</strong></td>
+                    <td style="color: var(--text-secondary);">{{ item.description }}</td>
+                    <td>
+                        {% if item.status == 'Not Uploaded' %}
+                        <span class="status-badge status-draft">Not Uploaded</span>
+                        {% elif item.status == 'Executed' %}
+                        <span class="status-badge status-verified">Executed</span>
+                        {% elif item.status == 'Pending' %}
+                        <span class="status-badge status-pending">Pending</span>
+                        {% elif item.status == 'Uploaded' %}
+                        <span class="status-badge status-under-review">Uploaded</span>
+                        {% else %}
+                        <span class="status-badge">{{ item.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if item.document %}
+                        <a href="{{ url_for('legal.view', id=item.document.id) }}" class="btn btn-sm btn-secondary">View</a>
+                        <a href="{{ url_for('legal.download', id=item.document.id) }}" class="btn btn-sm btn-secondary">Download</a>
+                        {% else %}
+                        <a href="{{ url_for('legal.upload', loan_id=loan.id, doc_type=item.type) }}" class="btn btn-sm btn-primary">Upload</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% set complete_count = loan.get_document_checklist()|selectattr('is_complete')|list|length %}
+        {% set total_count = loan.get_document_checklist()|length %}
+        <div style="margin-top: 15px; padding: 10px; background: var(--bg-secondary); border-radius: 4px;">
+            <strong>Progress:</strong> {{ complete_count }} of {{ total_count }} documents complete
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- All Documents -->
+<div class="card mt-4">
+    <div class="card-header">
+        <span>All Documents</span>
+        {% if loan.status in ['Draft', 'UnderReview', 'Approved'] %}
+        <a href="{{ url_for('legal.upload', loan_id=loan.id) }}" class="btn btn-sm btn-primary">Upload Document</a>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        {% if loan.documents.count() > 0 %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Uploaded</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doc in loan.documents %}
+                <tr>
+                    <td>{{ doc.document_type }}</td>
+                    <td>{{ doc.name }}</td>
+                    <td>
+                        <span class="status-badge status-{{ 'verified' if doc.is_executed else 'pending' }}">
+                            {{ doc.execution_status }}
+                        </span>
+                    </td>
+                    <td>{{ doc.created_at.strftime('%Y-%m-%d') }}</td>
+                    <td>
+                        <a href="{{ url_for('legal.view', id=doc.id) }}" class="btn btn-sm btn-secondary">View</a>
+                        <a href="{{ url_for('legal.download', id=doc.id) }}" class="btn btn-sm btn-secondary">Download</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <p>No documents uploaded yet.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Payment Schedule -->
+{% if loan.schedule.count() > 0 %}
+<div class="card mt-4">
+    <div class="card-header">Payment Schedule</div>
+    <div class="card-body">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Due Date</th>
+                    <th>Interest</th>
+                    <th>Principal</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sched in loan.schedule %}
+                <tr class="{{ 'overdue' if sched.is_overdue else '' }}">
+                    <td>{{ sched.payment_number }}</td>
+                    <td>{{ sched.due_date.strftime('%Y-%m-%d') }}</td>
+                    <td>{{ "Q{:,.2f}".format(sched.interest_due) }}</td>
+                    <td>{{ "Q{:,.2f}".format(sched.principal_due) }}</td>
+                    <td>{{ "Q{:,.2f}".format(sched.total_due) }}</td>
+                    <td>
+                        {% if sched.is_paid %}
+                        <span class="status-badge status-verified">Paid</span>
+                        {% elif sched.is_overdue %}
+                        <span class="status-badge status-defaulted">Overdue</span>
+                        {% else %}
+                        <span class="status-badge status-pending">Pending</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<div class="mt-4">
+    <a href="{{ url_for('loans.my_loans') }}" class="btn btn-secondary">Back to My Loans</a>
+</div>
+{% endblock %}

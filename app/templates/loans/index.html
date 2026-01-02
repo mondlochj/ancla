@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Loans - Ancla Capital{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Loans</h1>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <form method="GET" style="display: flex; gap: 10px; align-items: center;">
+            <input type="text" name="search" class="form-control" style="width: 200px;"
+                   placeholder="Loan # or name..." value="{{ search }}">
+            <select name="status" class="form-control" style="width: 150px;">
+                <option value="">All Status</option>
+                {% for status in LoanStatus %}
+                <option value="{{ status.value }}" {{ 'selected' if status_filter == status.value }}>
+                    {{ status.value }}
+                </option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-secondary">Filter</button>
+        </form>
+    </div>
+    <div class="card-body">
+        {% if loans.items %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Loan #</th>
+                        <th>Borrower</th>
+                        <th>Amount</th>
+                        <th>Term</th>
+                        <th>LTV</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for loan in loans.items %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('loans.view', id=loan.id) }}">
+                                {{ loan.loan_number }}
+                            </a>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('borrowers.view', id=loan.borrower.id) }}">
+                                {{ loan.borrower.full_name }}
+                            </a>
+                        </td>
+                        <td>{{ "Q{:,.2f}".format(loan.loan_amount) }}</td>
+                        <td>{{ loan.term_months }} mo</td>
+                        <td>{{ "{:.1%}".format(loan.ltv) }}</td>
+                        <td>
+                            <span class="status-badge status-{{ loan.status|lower|replace('_', '-') }}">
+                                {{ loan.status }}
+                            </span>
+                        </td>
+                        <td>{{ loan.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            <a href="{{ url_for('loans.view', id=loan.id) }}" class="btn btn-sm btn-secondary">View</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if loans.pages > 1 %}
+        <div class="pagination">
+            {% if loans.has_prev %}
+            <a href="{{ url_for('loans.index', page=loans.prev_num, status=status_filter, search=search) }}">Previous</a>
+            {% endif %}
+            {% for page_num in loans.iter_pages() %}
+                {% if page_num %}
+                    <a href="{{ url_for('loans.index', page=page_num, status=status_filter, search=search) }}"
+                       class="{{ 'active' if page_num == loans.page }}">{{ page_num }}</a>
+                {% else %}
+                    <span>...</span>
+                {% endif %}
+            {% endfor %}
+            {% if loans.has_next %}
+            <a href="{{ url_for('loans.index', page=loans.next_num, status=status_filter, search=search) }}">Next</a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="empty-state">
+            <h3>No loans found</h3>
+            <p>Create a loan from a borrower's profile.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

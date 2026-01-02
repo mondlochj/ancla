@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block title %}Property {{ property.registry_number }} - Ancla Capital{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Property: {{ property.registry_number }}</h1>
+    <div class="actions">
+        <a href="{{ url_for('collateral.edit', id=property.id) }}" class="btn btn-secondary">Edit</a>
+        {% if property.verified and not property.has_active_loan() %}
+        <a href="{{ url_for('loans.create', borrower_id=property.borrower_id, property_id=property.id) }}" class="btn btn-primary">Create Loan</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="detail-grid">
+    <div class="card">
+        <div class="card-header">
+            <span>Registry Information</span>
+            {% if property.verified %}
+            <span class="status-badge status-verified">Verified</span>
+            {% else %}
+            <span class="status-badge status-pending">Not Verified</span>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            <div class="detail-item">
+                <div class="detail-label">Finca</div>
+                <div class="detail-value">{{ property.finca }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Folio</div>
+                <div class="detail-value">{{ property.folio }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Libro</div>
+                <div class="detail-value">{{ property.libro }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Property Type</div>
+                <div class="detail-value">{{ property.property_type }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Location</div>
+        <div class="card-body">
+            <div class="detail-item">
+                <div class="detail-label">Department</div>
+                <div class="detail-value">{{ property.department }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Municipality</div>
+                <div class="detail-value">{{ property.municipality }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Address</div>
+                <div class="detail-value">{{ property.address or '-' }}</div>
+            </div>
+            {% set coords = property.get_coordinates() %}
+            {% if coords %}
+            <div class="detail-item">
+                <div class="detail-label">GPS Coordinates</div>
+                <div class="detail-value">{{ coords.latitude }}, {{ coords.longitude }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Valuation</div>
+        <div class="card-body">
+            <div class="detail-item">
+                <div class="detail-label">Market Value</div>
+                <div class="detail-value">{{ "Q{:,.2f}".format(property.market_value) }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Appraised Value</div>
+                <div class="detail-value">{{ "Q{:,.2f}".format(property.appraised_value) if property.appraised_value else '-' }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Appraisal Date</div>
+                <div class="detail-value">{{ property.appraisal_date.strftime('%Y-%m-%d') if property.appraisal_date else '-' }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Appraised By</div>
+                <div class="detail-value">{{ property.appraised_by or '-' }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Owner</div>
+        <div class="card-body">
+            <div class="detail-item">
+                <div class="detail-label">Name</div>
+                <div class="detail-value">
+                    <a href="{{ url_for('borrowers.view', id=property.borrower.id) }}">
+                        {{ property.borrower.full_name }}
+                    </a>
+                </div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Phone</div>
+                <div class="detail-value">{{ property.borrower.phone }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Has Active Loan</div>
+                <div class="detail-value">
+                    {% if property.has_active_loan() %}
+                    <span class="status-badge status-active">Yes</span>
+                    {% else %}
+                    No
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if not property.verified %}
+<div class="card mt-4">
+    <div class="card-header">Verification</div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('collateral.verify', id=property.id) }}">
+            {{ verification_form.hidden_tag() }}
+            <div class="form-group">
+                {{ verification_form.verification_notes.label }}
+                {{ verification_form.verification_notes(class="form-control", rows=3, placeholder="Add verification notes...") }}
+            </div>
+            <button type="submit" class="btn btn-success">Verify Property</button>
+        </form>
+    </div>
+</div>
+{% elif property.verification_notes %}
+<div class="card mt-4">
+    <div class="card-header">Verification Notes</div>
+    <div class="card-body">
+        <p>{{ property.verification_notes }}</p>
+        <small class="text-muted">Verified on {{ property.verified_at.strftime('%Y-%m-%d %H:%M') }}</small>
+    </div>
+</div>
+{% endif %}
+
+<div class="card mt-4">
+    <div class="card-header">
+        <span>Photos</span>
+    </div>
+    <div class="card-body">
+        {% if property.photos.count() > 0 %}
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
+            {% for photo in property.photos %}
+            <div style="border: 1px solid #ddd; border-radius: 4px; overflow: hidden;">
+                <img src="{{ url_for('static', filename='../' + photo.file_path) }}" alt="{{ photo.description or 'Property photo' }}"
+                     style="width: 100%; height: 150px; object-fit: cover;">
+                {% if photo.description %}
+                <p style="padding: 8px; margin: 0; font-size: 12px;">{{ photo.description }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p>No photos uploaded yet.</p>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('collateral.add_photo', id=property.id) }}" enctype="multipart/form-data" class="mt-4">
+            {{ photo_form.hidden_tag() }}
+            <div class="form-row">
+                <div class="form-group">
+                    {{ photo_form.photo(class="form-control") }}
+                </div>
+                <div class="form-group">
+                    {{ photo_form.description(class="form-control", placeholder="Description (optional)") }}
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-secondary">Upload Photo</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">Loan History</div>
+    <div class="card-body">
+        {% if property.loans.count() > 0 %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Loan #</th>
+                    <th>Amount</th>
+                    <th>LTV</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for loan in property.loans %}
+                <tr>
+                    <td><a href="{{ url_for('loans.view', id=loan.id) }}">{{ loan.loan_number }}</a></td>
+                    <td>{{ "Q{:,.2f}".format(loan.loan_amount) }}</td>
+                    <td>{{ "{:.1%}".format(loan.ltv) }}</td>
+                    <td>
+                        <span class="status-badge status-{{ loan.status|lower|replace('_', '-') }}">
+                            {{ loan.status }}
+                        </span>
+                    </td>
+                    <td>{{ loan.created_at.strftime('%Y-%m-%d') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <p>No loans on this property.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

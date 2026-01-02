@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Overdue Payments - Ancla Capital{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Overdue Payments</h1>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if overdue_items %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Loan #</th>
+                        <th>Borrower</th>
+                        <th>Due Date</th>
+                        <th>Days Overdue</th>
+                        <th>Amount Due</th>
+                        <th>Late Fee</th>
+                        <th>Total</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for schedule, loan in overdue_items %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('loans.view', id=loan.id) }}">
+                                {{ loan.loan_number }}
+                            </a>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('borrowers.view', id=loan.borrower.id) }}">
+                                {{ loan.borrower.full_name }}
+                            </a>
+                        </td>
+                        <td>{{ schedule.due_date.strftime('%Y-%m-%d') }}</td>
+                        <td style="color: var(--danger-color); font-weight: bold;">
+                            {{ (today - schedule.due_date).days }} days
+                        </td>
+                        <td>{{ "Q{:,.2f}".format(schedule.interest_due + schedule.principal_due) }}</td>
+                        <td>{{ "Q{:,.2f}".format(schedule.late_fee) }}</td>
+                        <td style="font-weight: bold;">{{ "Q{:,.2f}".format(schedule.total_due) }}</td>
+                        <td>
+                            <div class="actions">
+                                <a href="{{ url_for('payments.record', loan_id=loan.id) }}" class="btn btn-sm btn-primary">Record Payment</a>
+                                <a href="{{ url_for('collections.create_action', loan_id=loan.id) }}" class="btn btn-sm btn-secondary">Collection Action</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <h3>No Overdue Payments</h3>
+            <p>All payments are current.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Collections - Ancla Capital{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Collections Dashboard</h1>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>Grace Period</h3>
+        <div class="value">{{ loans_by_stage.grace|length }}</div>
+        <div class="change">1-5 days overdue</div>
+    </div>
+    <div class="stat-card">
+        <h3>Reminder Stage</h3>
+        <div class="value">{{ loans_by_stage.reminder|length }}</div>
+        <div class="change">6-15 days overdue</div>
+    </div>
+    <div class="stat-card">
+        <h3>Delinquent</h3>
+        <div class="value" style="color: var(--warning-color);">{{ loans_by_stage.delinquent|length }}</div>
+        <div class="change">16-30 days overdue</div>
+    </div>
+    <div class="stat-card">
+        <h3>Legal Ready</h3>
+        <div class="value" style="color: var(--danger-color);">{{ loans_by_stage.legal_ready|length }}</div>
+        <div class="change">30+ days overdue</div>
+    </div>
+</div>
+
+{% if loans_by_stage.legal_ready %}
+<div class="card mb-4">
+    <div class="card-header" style="background: #fee2e2;">
+        <span style="color: var(--danger-color); font-weight: bold;">Legal Ready (30+ days)</span>
+    </div>
+    <div class="card-body">
+        <table>
+            <thead>
+                <tr>
+                    <th>Loan #</th>
+                    <th>Borrower</th>
+                    <th>Days Overdue</th>
+                    <th>Outstanding</th>
+                    <th>Phone</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for loan, days in loans_by_stage.legal_ready %}
+                <tr>
+                    <td><a href="{{ url_for('loans.view', id=loan.id) }}">{{ loan.loan_number }}</a></td>
+                    <td>{{ loan.borrower.full_name }}</td>
+                    <td style="color: var(--danger-color); font-weight: bold;">{{ days }}</td>
+                    <td>{{ "Q{:,.2f}".format(loan.outstanding_principal + loan.outstanding_interest) }}</td>
+                    <td>{{ loan.borrower.phone }}</td>
+                    <td>
+                        <a href="{{ url_for('collections.loan_detail', loan_id=loan.id) }}" class="btn btn-sm btn-danger">Manage</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if loans_by_stage.delinquent %}
+<div class="card mb-4">
+    <div class="card-header" style="background: #fef3c7;">
+        <span style="color: var(--warning-color); font-weight: bold;">Delinquent (16-30 days)</span>
+    </div>
+    <div class="card-body">
+        <table>
+            <thead>
+                <tr>
+                    <th>Loan #</th>
+                    <th>Borrower</th>
+                    <th>Days Overdue</th>
+                    <th>Outstanding</th>
+                    <th>Phone</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for loan, days in loans_by_stage.delinquent %}
+                <tr>
+                    <td><a href="{{ url_for('loans.view', id=loan.id) }}">{{ loan.loan_number }}</a></td>
+                    <td>{{ loan.borrower.full_name }}</td>
+                    <td style="color: var(--warning-color);">{{ days }}</td>
+                    <td>{{ "Q{:,.2f}".format(loan.outstanding_principal + loan.outstanding_interest) }}</td>
+                    <td>{{ loan.borrower.phone }}</td>
+                    <td>
+                        <a href="{{ url_for('collections.loan_detail', loan_id=loan.id) }}" class="btn btn-sm btn-secondary">Manage</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if loans_by_stage.reminder %}
+<div class="card mb-4">
+    <div class="card-header">
+        <span>Reminder Stage (6-15 days)</span>
+    </div>
+    <div class="card-body">
+        <table>
+            <thead>
+                <tr>
+                    <th>Loan #</th>
+                    <th>Borrower</th>
+                    <th>Days Overdue</th>
+                    <th>Amount Due</th>
+                    <th>Phone</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for loan, days in loans_by_stage.reminder %}
+                <tr>
+                    <td><a href="{{ url_for('loans.view', id=loan.id) }}">{{ loan.loan_number }}</a></td>
+                    <td>{{ loan.borrower.full_name }}</td>
+                    <td>{{ days }}</td>
+                    <td>{{ "Q{:,.2f}".format(loan.outstanding_principal + loan.outstanding_interest) }}</td>
+                    <td>{{ loan.borrower.phone }}</td>
+                    <td>
+                        <a href="{{ url_for('collections.loan_detail', loan_id=loan.id) }}" class="btn btn-sm btn-secondary">Manage</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if loans_by_stage.grace %}
+<div class="card">
+    <div class="card-header">
+        <span>Grace Period (1-5 days)</span>
+    </div>
+    <div class="card-body">
+        <table>
+            <thead>
+                <tr>
+                    <th>Loan #</th>
+                    <th>Borrower</th>
+                    <th>Days Overdue</th>
+                    <th>Amount Due</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for loan, days in loans_by_stage.grace %}
+                <tr>
+                    <td><a href="{{ url_for('loans.view', id=loan.id) }}">{{ loan.loan_number }}</a></td>
+                    <td>{{ loan.borrower.full_name }}</td>
+                    <td>{{ days }}</td>
+                    <td>{{ "Q{:,.2f}".format(loan.outstanding_principal + loan.outstanding_interest) }}</td>
+                    <td>
+                        <a href="{{ url_for('payments.record', loan_id=loan.id) }}" class="btn btn-sm btn-primary">Record Payment</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if not (loans_by_stage.grace or loans_by_stage.reminder or loans_by_stage.delinquent or loans_by_stage.legal_ready) %}
+<div class="card">
+    <div class="card-body">
+        <div class="empty-state">
+            <h3>No Delinquent Loans</h3>
+            <p>All loans are current. Great job!</p>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

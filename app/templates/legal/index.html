@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Legal Documents - Ancla Capital{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Legal Documents</h1>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <form method="GET" style="display: flex; gap: 10px; align-items: center;">
+            <select name="status" class="form-control" style="width: 150px;">
+                <option value="">All Status</option>
+                <option value="Pending" {{ 'selected' if status_filter == 'Pending' }}>Pending</option>
+                <option value="Uploaded" {{ 'selected' if status_filter == 'Uploaded' }}>Uploaded</option>
+                <option value="Sent" {{ 'selected' if status_filter == 'Sent' }}>Sent</option>
+                <option value="Executed" {{ 'selected' if status_filter == 'Executed' }}>Executed</option>
+            </select>
+            <button type="submit" class="btn btn-secondary">Filter</button>
+        </form>
+    </div>
+    <div class="card-body">
+        {% if documents.items %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Loan #</th>
+                        <th>Type</th>
+                        <th>Name</th>
+                        <th>Status</th>
+                        <th>Uploaded</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for doc in documents.items %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('loans.view', id=doc.loan.id) }}">
+                                {{ doc.loan.loan_number }}
+                            </a>
+                        </td>
+                        <td>{{ doc.document_type }}</td>
+                        <td>{{ doc.name }}</td>
+                        <td>
+                            <span class="status-badge status-{{ 'verified' if doc.is_executed else 'pending' }}">
+                                {{ doc.execution_status }}
+                            </span>
+                        </td>
+                        <td>{{ doc.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            <a href="{{ url_for('legal.view', id=doc.id) }}" class="btn btn-sm btn-secondary">View</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <h3>No documents found</h3>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

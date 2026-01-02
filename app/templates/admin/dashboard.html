@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Ancla Capital{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Dashboard</h1>
+    <span>{{ current_user.role.name }}</span>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>Active Portfolio</h3>
+        <div class="value">{{ "Q{:,.0f}".format(total_portfolio) }}</div>
+        <div class="change">{{ total_active_loans }} active loans</div>
+    </div>
+    <div class="stat-card">
+        <h3>Default Rate</h3>
+        <div class="value" style="{{ 'color: var(--danger-color);' if default_rate > 5 else '' }}">
+            {{ "{:.1f}%".format(default_rate) }}
+        </div>
+        <div class="change">Target: &lt; 5%</div>
+    </div>
+    <div class="stat-card">
+        <h3>Average LTV</h3>
+        <div class="value">{{ "{:.1f}%".format(avg_ltv * 100) }}</div>
+        <div class="change">Max: 40%</div>
+    </div>
+    <div class="stat-card">
+        <h3>Monthly Interest</h3>
+        <div class="value">{{ "Q{:,.0f}".format(monthly_interest) }}</div>
+        <div class="change">This month</div>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>Overdue Amount</h3>
+        <div class="value" style="{{ 'color: var(--danger-color);' if overdue_amount > 0 else '' }}">
+            {{ "Q{:,.0f}".format(overdue_amount) }}
+        </div>
+    </div>
+    <div class="stat-card">
+        <h3>Pending Approvals</h3>
+        <div class="value">{{ pending_approvals }}</div>
+        {% if pending_approvals > 0 %}
+        <a href="{{ url_for('loans.index', status='UnderReview') }}" style="font-size: 12px;">View</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="detail-grid mt-4">
+    <div class="card">
+        <div class="card-header">Loans by Status</div>
+        <div class="card-body">
+            {% if loans_by_status %}
+            <table>
+                <tbody>
+                    {% for status, count in loans_by_status %}
+                    <tr>
+                        <td>
+                            <span class="status-badge status-{{ status|lower|replace('_', '-') }}">
+                                {{ status }}
+                            </span>
+                        </td>
+                        <td style="text-align: right;">{{ count }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>No loans yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Portfolio by Region</div>
+        <div class="card-body">
+            {% if loans_by_region %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Department</th>
+                        <th>Loans</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for dept, count, amount in loans_by_region %}
+                    <tr>
+                        <td>{{ dept or 'Unknown' }}</td>
+                        <td>{{ count }}</td>
+                        <td>{{ "Q{:,.0f}".format(amount or 0) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>No regional data.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <span>Recent Loans</span>
+        <a href="{{ url_for('loans.index') }}" class="btn btn-sm btn-secondary">View All</a>
+    </div>
+    <div class="card-body">
+        {% if recent_loans %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Loan #</th>
+                    <th>Borrower</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for loan in recent_loans %}
+                <tr>
+                    <td><a href="{{ url_for('loans.view', id=loan.id) }}">{{ loan.loan_number }}</a></td>
+                    <td>{{ loan.borrower.full_name }}</td>
+                    <td>{{ "Q{:,.2f}".format(loan.loan_amount) }}</td>
+                    <td>
+                        <span class="status-badge status-{{ loan.status|lower|replace('_', '-') }}">
+                            {{ loan.status }}
+                        </span>
+                    </td>
+                    <td>{{ loan.created_at.strftime('%Y-%m-%d') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <p>No loans yet.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="detail-grid mt-4">
+    <div class="card">
+        <div class="card-header">Quick Actions</div>
+        <div class="card-body">
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <a href="{{ url_for('borrowers.create') }}" class="btn btn-primary">Add New Borrower</a>
+                <a href="{{ url_for('loans.index', status='UnderReview') }}" class="btn btn-secondary">Review Pending Loans</a>
+                <a href="{{ url_for('payments.overdue') }}" class="btn btn-secondary">View Overdue Payments</a>
+                <a href="{{ url_for('collections.index') }}" class="btn btn-secondary">Collections Dashboard</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

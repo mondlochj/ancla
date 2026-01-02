@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}Collections - {{ loan.loan_number }} - Ancla Capital{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Collections: {{ loan.loan_number }}</h1>
+    <span class="status-badge status-{{ loan.status|lower|replace('_', '-') }}" style="font-size: 16px; padding: 8px 16px;">
+        {{ current_stage }}
+    </span>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>Days Past Due</h3>
+        <div class="value" style="color: var(--danger-color);">{{ loan.days_past_due }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Outstanding Principal</h3>
+        <div class="value">{{ "Q{:,.2f}".format(loan.outstanding_principal) }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Outstanding Interest</h3>
+        <div class="value">{{ "Q{:,.2f}".format(loan.outstanding_interest) }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Loan Amount</h3>
+        <div class="value">{{ "Q{:,.2f}".format(loan.loan_amount) }}</div>
+    </div>
+</div>
+
+<div class="detail-grid">
+    <div class="card">
+        <div class="card-header">Borrower Contact</div>
+        <div class="card-body">
+            <div class="detail-item">
+                <div class="detail-label">Name</div>
+                <div class="detail-value">{{ loan.borrower.full_name }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Phone</div>
+                <div class="detail-value" style="font-weight: bold; font-size: 18px;">{{ loan.borrower.phone }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Email</div>
+                <div class="detail-value">{{ loan.borrower.email or '-' }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Address</div>
+                <div class="detail-value">{{ loan.borrower.address or '-' }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Quick Actions</div>
+        <div class="card-body">
+            <div class="actions" style="flex-direction: column; gap: 10px;">
+                <a href="{{ url_for('payments.record', loan_id=loan.id) }}" class="btn btn-primary">Record Payment</a>
+                <a href="{{ url_for('collections.create_action', loan_id=loan.id) }}" class="btn btn-secondary">Log Collection Action</a>
+                <a href="{{ url_for('loans.view', id=loan.id) }}" class="btn btn-secondary">View Full Loan</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">Grant Extension</div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('collections.grant_extension', loan_id=loan.id) }}">
+            {{ extension_form.hidden_tag() }}
+            <div class="form-row">
+                <div class="form-group">
+                    {{ extension_form.extension_days.label }}
+                    {{ extension_form.extension_days(class="form-control", style="width: 100px;") }}
+                </div>
+                <div class="form-group" style="flex: 2;">
+                    {{ extension_form.notes.label }}
+                    {{ extension_form.notes(class="form-control", rows=1) }}
+                </div>
+                <div class="form-group">
+                    <label>&nbsp;</label>
+                    <button type="submit" class="btn btn-secondary">Grant Extension</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if loan.status == 'Defaulted' %}
+<div class="card mt-4">
+    <div class="card-header" style="background: #fee2e2;">Legal Escalation</div>
+    <div class="card-body">
+        <p>Escalate this loan to Legal Ready status for promesa de compraventa execution.</p>
+        <form method="POST" action="{{ url_for('collections.escalate_to_legal', loan_id=loan.id) }}">
+            {{ legal_form.hidden_tag() }}
+            <div class="form-group">
+                {{ legal_form.notes.label }}
+                {{ legal_form.notes(class="form-control", rows=2, placeholder="Document reason for legal escalation...") }}
+            </div>
+            <button type="submit" class="btn btn-danger">Escalate to Legal</button>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<div class="card mt-4">
+    <div class="card-header">Collection Action History</div>
+    <div class="card-body">
+        {% if actions %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Stage</th>
+                    <th>Action</th>
+                    <th>Notes</th>
+                    <th>By</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for action in actions %}
+                <tr>
+                    <td>{{ action.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>{{ action.stage }}</td>
+                    <td>
+                        {{ action.action_type }}
+                        {% if action.extension_granted %}
+                        <span class="status-badge status-approved">+{{ action.extension_days }} days</span>
+                        {% endif %}
+                        {% if action.escalated_to_legal %}
+                        <span class="status-badge status-defaulted">Legal</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ action.notes[:100] }}{{ '...' if action.notes|length > 100 else '' }}</td>
+                    <td>{{ action.creator.full_name if action.creator else '-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <p>No collection actions recorded yet.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

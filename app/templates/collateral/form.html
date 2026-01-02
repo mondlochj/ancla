@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Ancla Capital{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ title }}</h1>
+</div>
+
+{% if borrower %}
+<div class="alert alert-info">
+    Adding property for: <strong>{{ borrower.full_name }}</strong>
+</div>
+{% endif %}
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST" enctype="multipart/form-data">
+            {{ form.hidden_tag() }}
+
+            <h3 class="mb-4">Property Type</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    {{ form.property_type.label }}
+                    {{ form.property_type(class="form-control") }}
+                </div>
+            </div>
+
+            <h3 class="mb-4 mt-4">Registry Information</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    {{ form.finca.label }}
+                    {{ form.finca(class="form-control" + (" error" if form.finca.errors else "")) }}
+                    {% for error in form.finca.errors %}
+                    <span class="field-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <div class="form-group">
+                    {{ form.folio.label }}
+                    {{ form.folio(class="form-control" + (" error" if form.folio.errors else "")) }}
+                    {% for error in form.folio.errors %}
+                    <span class="field-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <div class="form-group">
+                    {{ form.libro.label }}
+                    {{ form.libro(class="form-control" + (" error" if form.libro.errors else "")) }}
+                    {% for error in form.libro.errors %}
+                    <span class="field-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <h3 class="mb-4 mt-4">Location</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    {{ form.department.label }}
+                    {{ form.department(class="form-control") }}
+                </div>
+
+                <div class="form-group">
+                    {{ form.municipality.label }}
+                    {{ form.municipality(class="form-control" + (" error" if form.municipality.errors else "")) }}
+                    {% for error in form.municipality.errors %}
+                    <span class="field-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                {{ form.address.label }}
+                {{ form.address(class="form-control", rows=2) }}
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    {{ form.latitude.label }}
+                    {{ form.latitude(class="form-control", placeholder="14.6349") }}
+                    <span class="form-text">GPS Latitude (optional)</span>
+                </div>
+
+                <div class="form-group">
+                    {{ form.longitude.label }}
+                    {{ form.longitude(class="form-control", placeholder="-90.5069") }}
+                    <span class="form-text">GPS Longitude (optional)</span>
+                </div>
+            </div>
+
+            <h3 class="mb-4 mt-4">Valuation</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    {{ form.market_value.label }}
+                    {{ form.market_value(class="form-control" + (" error" if form.market_value.errors else "")) }}
+                    {% for error in form.market_value.errors %}
+                    <span class="field-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <div class="form-group">
+                    {{ form.appraised_value.label }}
+                    {{ form.appraised_value(class="form-control") }}
+                </div>
+
+                <div class="form-group">
+                    {{ form.appraisal_date.label }}
+                    {{ form.appraisal_date(class="form-control", type="date") }}
+                </div>
+
+                <div class="form-group">
+                    {{ form.appraised_by.label }}
+                    {{ form.appraised_by(class="form-control") }}
+                </div>
+            </div>
+
+            <h3 class="mb-4 mt-4">Documents</h3>
+            <div class="form-group">
+                {{ form.title_pdf.label }}
+                {{ form.title_pdf(class="form-control") }}
+                <span class="form-text">Upload title deed or property certificate (PDF)</span>
+                {% for error in form.title_pdf.errors %}
+                <span class="field-error">{{ error }}</span>
+                {% endfor %}
+            </div>
+
+            <div class="actions mt-4">
+                <button type="submit" class="btn btn-primary">Save Property</button>
+                {% if borrower %}
+                <a href="{{ url_for('borrowers.view', id=borrower.id) }}" class="btn btn-secondary">Cancel</a>
+                {% else %}
+                <a href="{{ url_for('collateral.index') }}" class="btn btn-secondary">Cancel</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

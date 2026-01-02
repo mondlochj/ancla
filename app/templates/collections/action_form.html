@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Log Collection Action - Ancla Capital{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Log Collection Action</h1>
+</div>
+
+<div class="alert alert-info">
+    <strong>Loan:</strong> {{ loan.loan_number }} |
+    <strong>Borrower:</strong> {{ loan.borrower.full_name }} |
+    <strong>Days Past Due:</strong> {{ loan.days_past_due }}
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST">
+            {{ form.hidden_tag() }}
+
+            <div class="form-row">
+                <div class="form-group">
+                    {{ form.action_type.label }}
+                    {{ form.action_type(class="form-control") }}
+                </div>
+            </div>
+
+            <div class="form-group">
+                {{ form.notes.label }}
+                {{ form.notes(class="form-control" + (" error" if form.notes.errors else ""), rows=4) }}
+                {% for error in form.notes.errors %}
+                <span class="field-error">{{ error }}</span>
+                {% endfor %}
+            </div>
+
+            <h3 class="mt-4 mb-4">Contact Details (Optional)</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    {{ form.contact_name.label }}
+                    {{ form.contact_name(class="form-control") }}
+                </div>
+
+                <div class="form-group">
+                    {{ form.contact_phone.label }}
+                    {{ form.contact_phone(class="form-control") }}
+                </div>
+
+                <div class="form-group">
+                    {{ form.contact_result.label }}
+                    {{ form.contact_result(class="form-control", placeholder="e.g., Answered, No answer, Promised payment") }}
+                </div>
+            </div>
+
+            <h3 class="mt-4 mb-4">Payment Promise (if applicable)</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    {{ form.promise_amount.label }}
+                    {{ form.promise_amount(class="form-control") }}
+                </div>
+
+                <div class="form-group">
+                    {{ form.promise_date.label }}
+                    {{ form.promise_date(class="form-control", type="date") }}
+                </div>
+            </div>
+
+            <div class="actions mt-4">
+                <button type="submit" class="btn btn-primary">Record Action</button>
+                <a href="{{ url_for('collections.loan_detail', loan_id=loan.id) }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

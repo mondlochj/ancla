@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}User Management - Ancla Capital{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>User Management</h1>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <table>
+            <thead>
+                <tr>
+                    <th>Email</th>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Verified</th>
+                    <th>Active</th>
+                    <th>Last Login</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.full_name }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('admin.change_user_role', id=user.id) }}" style="display: inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <select name="role_id" class="form-control" style="width: auto; display: inline;"
+                                    onchange="this.form.submit()" {{ 'disabled' if user.id == current_user.id }}>
+                                {% for role in roles %}
+                                <option value="{{ role.id }}" {{ 'selected' if user.role_id == role.id }}>
+                                    {{ role.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </td>
+                    <td>
+                        {% if user.is_verified %}
+                        <span class="status-badge status-verified">Yes</span>
+                        {% else %}
+                        <span class="status-badge status-pending">No</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if user.is_active %}
+                        <span class="status-badge status-active">Active</span>
+                        {% else %}
+                        <span class="status-badge status-defaulted">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else 'Never' }}</td>
+                    <td>
+                        {% if user.id != current_user.id %}
+                        <form method="POST" action="{{ url_for('admin.toggle_user_active', id=user.id) }}" style="display: inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm {{ 'btn-danger' if user.is_active else 'btn-success' }}">
+                                {{ 'Deactivate' if user.is_active else 'Activate' }}
+                            </button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

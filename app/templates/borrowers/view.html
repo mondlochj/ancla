@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+
+{% block title %}{{ borrower.full_name }} - Ancla Capital{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ borrower.full_name }}</h1>
+    <div class="actions">
+        <a href="{{ url_for('borrowers.edit', id=borrower.id) }}" class="btn btn-secondary">Edit</a>
+        <a href="{{ url_for('collateral.create', borrower_id=borrower.id) }}" class="btn btn-primary">Add Property</a>
+        <a href="{{ url_for('loans.create', borrower_id=borrower.id) }}" class="btn btn-primary">New Loan</a>
+    </div>
+</div>
+
+<div class="detail-grid">
+    <div class="card">
+        <div class="card-header">
+            <span>Personal Information</span>
+            <span class="status-badge status-{{ borrower.verification_status|lower }}">
+                {{ borrower.verification_status }}
+            </span>
+        </div>
+        <div class="card-body">
+            <div class="detail-item">
+                <div class="detail-label">Full Name</div>
+                <div class="detail-value">{{ borrower.full_name }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">DPI</div>
+                <div class="detail-value">{{ borrower.masked_dpi }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">NIT</div>
+                <div class="detail-value">{{ borrower.nit or '-' }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Risk Tier</div>
+                <div class="detail-value">{{ borrower.risk_tier }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Contact Information</div>
+        <div class="card-body">
+            <div class="detail-item">
+                <div class="detail-label">Phone</div>
+                <div class="detail-value">{{ borrower.phone }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Email</div>
+                <div class="detail-value">{{ borrower.email or '-' }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Address</div>
+                <div class="detail-value">{{ borrower.address or '-' }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Location</div>
+                <div class="detail-value">{{ borrower.municipality or '' }} {{ borrower.department or '' }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Employment / Business</div>
+        <div class="card-body">
+            <div class="detail-item">
+                <div class="detail-label">Employment Type</div>
+                <div class="detail-value">{{ borrower.employment_type or '-' }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Employer</div>
+                <div class="detail-value">{{ borrower.employer_name or '-' }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Business</div>
+                <div class="detail-value">{{ borrower.business_name or '-' }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Monthly Income</div>
+                <div class="detail-value">{{ "Q{:,.2f}".format(borrower.monthly_income) if borrower.monthly_income else '-' }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Account Link -->
+<div class="card mt-4">
+    <div class="card-header">User Account (Portal Access)</div>
+    <div class="card-body">
+        {% if borrower.user %}
+        <div class="detail-item">
+            <div class="detail-label">Linked User</div>
+            <div class="detail-value">
+                {{ borrower.user.email }}
+                <span class="status-badge status-verified" style="margin-left: 10px;">Linked</span>
+            </div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">User Name</div>
+            <div class="detail-value">{{ borrower.user.full_name }}</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">Verified</div>
+            <div class="detail-value">{{ 'Yes' if borrower.user.is_verified else 'No' }}</div>
+        </div>
+        <form method="POST" action="{{ url_for('borrowers.unlink_user', id=borrower.id) }}" style="margin-top: 15px;"
+              onsubmit="return confirm('Are you sure you want to unlink this user account?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-danger btn-sm">Unlink User Account</button>
+        </form>
+        {% else %}
+        <p style="margin-bottom: 15px; color: var(--text-secondary);">
+            No user account linked. Link a user account to allow the borrower to access the portal and view their loans.
+        </p>
+        <form method="POST" action="{{ url_for('borrowers.link_user', id=borrower.id) }}">
+            {{ link_user_form.hidden_tag() }}
+            <div class="form-group">
+                {{ link_user_form.user_email.label }}
+                {{ link_user_form.user_email(class="form-control", placeholder="borrower@example.com") }}
+                <span class="form-text">Enter the email address of the registered user account to link.</span>
+            </div>
+            <button type="submit" class="btn btn-primary">Link User Account</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+{% if borrower.verification_status == 'Pending' or borrower.verification_status == 'InProgress' %}
+<div class="card mt-4">
+    <div class="card-header">Verification</div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('borrowers.verify', id=borrower.id) }}">
+            {{ verification_form.hidden_tag() }}
+            <div class="form-group">
+                {{ verification_form.verification_notes.label }}
+                {{ verification_form.verification_notes(class="form-control", rows=3) }}
+            </div>
+            <div class="actions">
+                <button type="submit" name="submit_verify" class="btn btn-success">Verify Borrower</button>
+                <button type="submit" name="submit_reject" class="btn btn-danger">Reject</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+{% if borrower.verification_notes %}
+<div class="card mt-4">
+    <div class="card-header">Verification Notes</div>
+    <div class="card-body">
+        <p>{{ borrower.verification_notes }}</p>
+        {% if borrower.verified_at %}
+        <small class="text-muted">
+            {{ 'Verified' if borrower.verification_status == 'Verified' else 'Rejected' }}
+            on {{ borrower.verified_at.strftime('%Y-%m-%d %H:%M') }}
+        </small>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<div class="card mt-4">
+    <div class="card-header">
+        <span>Properties</span>
+        <a href="{{ url_for('collateral.create', borrower_id=borrower.id) }}" class="btn btn-sm btn-primary">Add Property</a>
+    </div>
+    <div class="card-body">
+        {% if borrower.properties.count() > 0 %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Registry</th>
+                    <th>Type</th>
+                    <th>Location</th>
+                    <th>Value</th>
+                    <th>Verified</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for prop in borrower.properties %}
+                <tr>
+                    <td>{{ prop.registry_number }}</td>
+                    <td>{{ prop.property_type }}</td>
+                    <td>{{ prop.municipality }}, {{ prop.department }}</td>
+                    <td>{{ "Q{:,.2f}".format(prop.market_value) }}</td>
+                    <td>
+                        {% if prop.verified %}
+                        <span class="status-badge status-verified">Verified</span>
+                        {% else %}
+                        <span class="status-badge status-pending">Pending</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('collateral.view', id=prop.id) }}" class="btn btn-sm btn-secondary">View</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <p>No properties registered yet.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <span>Loans</span>
+        {% if borrower.is_verified %}
+        <a href="{{ url_for('loans.create', borrower_id=borrower.id) }}" class="btn btn-sm btn-primary">New Loan</a>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        {% if borrower.loans.count() > 0 %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Loan #</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for loan in borrower.loans %}
+                <tr>
+                    <td>{{ loan.loan_number }}</td>
+                    <td>{{ "Q{:,.2f}".format(loan.loan_amount) }}</td>
+                    <td>
+                        <span class="status-badge status-{{ loan.status|lower|replace('_', '-') }}">
+                            {{ loan.status }}
+                        </span>
+                    </td>
+                    <td>{{ loan.created_at.strftime('%Y-%m-%d') }}</td>
+                    <td>
+                        <a href="{{ url_for('loans.view', id=loan.id) }}" class="btn btn-sm btn-secondary">View</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <p>No loans yet.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

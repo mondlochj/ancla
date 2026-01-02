@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Properties - Ancla Capital{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Properties / Collateral</h1>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <form method="GET" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <input type="text" name="search" class="form-control" style="width: 250px;"
+                   placeholder="Search name, email, DPI, finca..." value="{{ search }}">
+            <select name="verified" class="form-control" style="width: 150px;">
+                <option value="">All Status</option>
+                <option value="yes" {{ 'selected' if verified_filter == 'yes' }}>Verified</option>
+                <option value="no" {{ 'selected' if verified_filter == 'no' }}>Not Verified</option>
+            </select>
+            <select name="department" class="form-control" style="width: 180px;">
+                <option value="">All Departments</option>
+                {% for dept in ['Guatemala', 'Escuintla', 'Sacatepequez', 'Quetzaltenango', 'Peten'] %}
+                <option value="{{ dept }}" {{ 'selected' if department_filter == dept }}>{{ dept }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-secondary">Search</button>
+            {% if search or verified_filter or department_filter %}
+            <a href="{{ url_for('collateral.index') }}" class="btn btn-secondary">Clear</a>
+            {% endif %}
+        </form>
+    </div>
+    <div class="card-body">
+        {% if properties.items %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Registry #</th>
+                        <th>Type</th>
+                        <th>Owner</th>
+                        <th>Location</th>
+                        <th>Market Value</th>
+                        <th>Verified</th>
+                        <th>Active Loan</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for prop in properties.items %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('collateral.view', id=prop.id) }}">
+                                {{ prop.registry_number }}
+                            </a>
+                        </td>
+                        <td>{{ prop.property_type }}</td>
+                        <td>
+                            <a href="{{ url_for('borrowers.view', id=prop.borrower.id) }}">
+                                {{ prop.borrower.full_name }}
+                            </a>
+                        </td>
+                        <td>{{ prop.municipality }}, {{ prop.department }}</td>
+                        <td>{{ "Q{:,.2f}".format(prop.market_value) }}</td>
+                        <td>
+                            {% if prop.verified %}
+                            <span class="status-badge status-verified">Verified</span>
+                            {% else %}
+                            <span class="status-badge status-pending">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if prop.has_active_loan() %}
+                            <span class="status-badge status-active">Yes</span>
+                            {% else %}
+                            <span>-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('collateral.view', id=prop.id) }}" class="btn btn-sm btn-secondary">View</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if properties.pages > 1 %}
+        <div class="pagination">
+            {% if properties.has_prev %}
+            <a href="{{ url_for('collateral.index', page=properties.prev_num, search=search, verified=verified_filter, department=department_filter) }}">Previous</a>
+            {% endif %}
+            {% for page_num in properties.iter_pages() %}
+                {% if page_num %}
+                    <a href="{{ url_for('collateral.index', page=page_num, search=search, verified=verified_filter, department=department_filter) }}"
+                       class="{{ 'active' if page_num == properties.page }}">{{ page_num }}</a>
+                {% else %}
+                    <span>...</span>
+                {% endif %}
+            {% endfor %}
+            {% if properties.has_next %}
+            <a href="{{ url_for('collateral.index', page=properties.next_num, search=search, verified=verified_filter, department=department_filter) }}">Next</a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="empty-state">
+            <h3>No properties found</h3>
+            <p>Properties are added through borrower profiles.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

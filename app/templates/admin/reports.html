@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - Ancla Capital{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Reports</h1>
+</div>
+
+<div class="detail-grid">
+    <div class="card">
+        <div class="card-header">Portfolio Reports</div>
+        <div class="card-body">
+            <ul style="list-style: none; padding: 0;">
+                <li style="padding: 10px 0; border-bottom: 1px solid var(--gray-200);">
+                    <a href="{{ url_for('loans.index') }}">Active Portfolio Summary</a>
+                </li>
+                <li style="padding: 10px 0; border-bottom: 1px solid var(--gray-200);">
+                    <a href="{{ url_for('payments.overdue') }}">Overdue Payments Report</a>
+                </li>
+                <li style="padding: 10px 0;">
+                    <a href="{{ url_for('collections.index') }}">Delinquency Report</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Operational Reports</div>
+        <div class="card-body">
+            <ul style="list-style: none; padding: 0;">
+                <li style="padding: 10px 0; border-bottom: 1px solid var(--gray-200);">
+                    <a href="{{ url_for('borrowers.index') }}">Borrower List</a>
+                </li>
+                <li style="padding: 10px 0; border-bottom: 1px solid var(--gray-200);">
+                    <a href="{{ url_for('collateral.index') }}">Property Register</a>
+                </li>
+                <li style="padding: 10px 0;">
+                    <a href="{{ url_for('payments.index') }}">Payment History</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Administrative</div>
+        <div class="card-body">
+            <ul style="list-style: none; padding: 0;">
+                <li style="padding: 10px 0; border-bottom: 1px solid var(--gray-200);">
+                    <a href="{{ url_for('admin.audit_log') }}">Audit Log</a>
+                </li>
+                {% if current_user.is_admin() %}
+                <li style="padding: 10px 0;">
+                    <a href="{{ url_for('admin.users') }}">User Management</a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

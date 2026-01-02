@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Ancla Capital{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ title }}</h1>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST">
+            {{ form.hidden_tag() }}
+
+            <h3 class="mb-4">Personal Information</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    {{ form.full_name.label }}
+                    {{ form.full_name(class="form-control" + (" error" if form.full_name.errors else "")) }}
+                    {% for error in form.full_name.errors %}
+                    <span class="field-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <div class="form-group">
+                    {{ form.dpi.label }}
+                    {{ form.dpi(class="form-control" + (" error" if form.dpi.errors else ""), placeholder="1234567890123") }}
+                    {% for error in form.dpi.errors %}
+                    <span class="field-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <div class="form-group">
+                    {{ form.nit.label }}
+                    {{ form.nit(class="form-control") }}
+                    {% for error in form.nit.errors %}
+                    <span class="field-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <h3 class="mb-4 mt-4">Contact Information</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    {{ form.phone.label }}
+                    {{ form.phone(class="form-control" + (" error" if form.phone.errors else ""), placeholder="12345678") }}
+                    {% for error in form.phone.errors %}
+                    <span class="field-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <div class="form-group">
+                    {{ form.email.label }}
+                    {{ form.email(class="form-control", placeholder="email@example.com") }}
+                    {% for error in form.email.errors %}
+                    <span class="field-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                {{ form.address.label }}
+                {{ form.address(class="form-control", rows=2) }}
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    {{ form.department.label }}
+                    {{ form.department(class="form-control") }}
+                </div>
+
+                <div class="form-group">
+                    {{ form.municipality.label }}
+                    {{ form.municipality(class="form-control") }}
+                </div>
+            </div>
+
+            <h3 class="mb-4 mt-4">Employment / Business</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    {{ form.employment_type.label }}
+                    {{ form.employment_type(class="form-control") }}
+                </div>
+
+                <div class="form-group">
+                    {{ form.employer_name.label }}
+                    {{ form.employer_name(class="form-control") }}
+                </div>
+
+                <div class="form-group">
+                    {{ form.business_name.label }}
+                    {{ form.business_name(class="form-control") }}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    {{ form.monthly_income.label }}
+                    {{ form.monthly_income(class="form-control") }}
+                </div>
+
+                <div class="form-group">
+                    {{ form.risk_tier.label }}
+                    {{ form.risk_tier(class="form-control") }}
+                </div>
+            </div>
+
+            <div class="actions mt-4">
+                <button type="submit" class="btn btn-primary">Save Borrower</button>
+                <a href="{{ url_for('borrowers.index') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

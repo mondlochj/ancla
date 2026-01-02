@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}{{ document.name }} - Ancla Capital{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ document.name }}</h1>
+    <span class="status-badge status-{{ 'verified' if document.is_executed else 'pending' }}" style="font-size: 16px; padding: 8px 16px;">
+        {{ document.execution_status }}
+    </span>
+</div>
+
+<div class="detail-grid">
+    <div class="card">
+        <div class="card-header">Document Details</div>
+        <div class="card-body">
+            <div class="detail-item">
+                <div class="detail-label">Type</div>
+                <div class="detail-value">{{ document.document_type }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Name</div>
+                <div class="detail-value">{{ document.name }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Version</div>
+                <div class="detail-value">{{ document.version }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Description</div>
+                <div class="detail-value">{{ document.description or '-' }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Related Loan</div>
+        <div class="card-body">
+            <div class="detail-item">
+                <div class="detail-label">Loan Number</div>
+                <div class="detail-value">
+                    <a href="{{ url_for('loans.view', id=document.loan.id) }}">
+                        {{ document.loan.loan_number }}
+                    </a>
+                </div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Borrower</div>
+                <div class="detail-value">{{ document.loan.borrower.full_name }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Loan Amount</div>
+                <div class="detail-value">{{ "Q{:,.2f}".format(document.loan.loan_amount) }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Upload Information</div>
+        <div class="card-body">
+            <div class="detail-item">
+                <div class="detail-label">Uploaded By</div>
+                <div class="detail-value">{{ document.uploader.full_name if document.uploader else '-' }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Upload Date</div>
+                <div class="detail-value">{{ document.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+            </div>
+        </div>
+    </div>
+
+    {% if document.accepted_at %}
+    <div class="card">
+        <div class="card-header">Digital Acceptance</div>
+        <div class="card-body">
+            <div class="detail-item">
+                <div class="detail-label">Accepted By</div>
+                <div class="detail-value">{{ document.accepter.full_name if document.accepter else '-' }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Accepted At</div>
+                <div class="detail-value">{{ document.accepted_at.strftime('%Y-%m-%d %H:%M:%S') }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">IP Address</div>
+                <div class="detail-value">{{ document.accepted_ip }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">User Agent</div>
+                <div class="detail-value" style="word-break: break-all; font-size: 12px;">{{ document.accepted_user_agent }}</div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">Actions</div>
+    <div class="card-body">
+        <div class="actions">
+            <a href="{{ url_for('legal.download', id=document.id) }}" class="btn btn-primary">Download PDF</a>
+
+            {% if current_user.role.name in ['Admin', 'Legal'] %}
+                {% if document.execution_status == 'Uploaded' %}
+                <form method="POST" action="{{ url_for('legal.mark_sent', id=document.id) }}" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-secondary">Mark as Sent</button>
+                </form>
+                {% endif %}
+
+                {% if document.execution_status in ['Uploaded', 'Sent'] %}
+                <form method="POST" action="{{ url_for('legal.mark_executed', id=document.id) }}" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-success">Mark as Executed</button>
+                </form>
+                {% endif %}
+            {% endif %}
+
+            {% if current_user.role.name == 'Borrower' and not document.accepted_at %}
+            <form method="POST" action="{{ url_for('legal.accept', id=document.id) }}">
+                {{ acceptance_form.hidden_tag() }}
+                <button type="submit" class="btn btn-success">Accept and Sign Document</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

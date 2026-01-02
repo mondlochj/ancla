@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Record Payment - Ancla Capital{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Record Payment</h1>
+</div>
+
+{% if loan %}
+<div class="alert alert-info">
+    <strong>Loan:</strong> {{ loan.loan_number }} |
+    <strong>Borrower:</strong> {{ loan.borrower.full_name }} |
+    <strong>Outstanding:</strong> {{ "Q{:,.2f}".format(loan.outstanding_principal + loan.outstanding_interest) }}
+</div>
+
+{% if loan.schedule.filter_by(is_paid=False).first() %}
+{% set next_due = loan.schedule.filter_by(is_paid=False).first() %}
+<div class="card mb-4">
+    <div class="card-header">Next Payment Due</div>
+    <div class="card-body">
+        <div class="detail-grid">
+            <div class="detail-item">
+                <div class="detail-label">Due Date</div>
+                <div class="detail-value">{{ next_due.due_date.strftime('%Y-%m-%d') }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Interest Due</div>
+                <div class="detail-value">{{ "Q{:,.2f}".format(next_due.interest_due) }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Principal Due</div>
+                <div class="detail-value">{{ "Q{:,.2f}".format(next_due.principal_due) }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Late Fee</div>
+                <div class="detail-value">{{ "Q{:,.2f}".format(next_due.late_fee) }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Total Due</div>
+                <div class="detail-value" style="font-weight: bold;">{{ "Q{:,.2f}".format(next_due.total_due) }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endif %}
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST">
+            {{ form.hidden_tag() }}
+
+            <div class="form-row">
+                <div class="form-group">
+                    {{ form.amount.label }}
+                    {{ form.amount(class="form-control" + (" error" if form.amount.errors else "")) }}
+                    {% for error in form.amount.errors %}
+                    <span class="field-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <div class="form-group">
+                    {{ form.payment_type.label }}
+                    {{ form.payment_type(class="form-control") }}
+                </div>
+
+                <div class="form-group">
+                    {{ form.payment_date.label }}
+                    {{ form.payment_date(class="form-control", type="date") }}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    {{ form.payment_method.label }}
+                    {{ form.payment_method(class="form-control") }}
+                </div>
+
+                <div class="form-group">
+                    {{ form.reference_number.label }}
+                    {{ form.reference_number(class="form-control", placeholder="Check # or transfer ref") }}
+                </div>
+            </div>
+
+            <div class="form-group">
+                {{ form.notes.label }}
+                {{ form.notes(class="form-control", rows=2) }}
+            </div>
+
+            <div class="actions">
+                <button type="submit" class="btn btn-primary">Record Payment</button>
+                {% if loan %}
+                <a href="{{ url_for('loans.view', id=loan.id) }}" class="btn btn-secondary">Cancel</a>
+                {% else %}
+                <a href="{{ url_for('payments.index') }}" class="btn btn-secondary">Cancel</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
