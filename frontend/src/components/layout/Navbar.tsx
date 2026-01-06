@@ -58,7 +58,7 @@ export function Navbar() {
         <div className="flex items-center gap-3">
           <span className="text-sm">{user.fullName}</span>
           <Badge variant="info" size="sm">
-            {ROLE_LABELS[user.role.name] || user.role.name}
+            {ROLE_LABELS[user.role] || user.role}
           </Badge>
           <Button
             variant="ghost"

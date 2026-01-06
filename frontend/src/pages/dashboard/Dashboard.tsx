@@ -46,6 +46,7 @@ const mockMetrics: DashboardMetrics = {
 const mockRecentLoans: Loan[] = [
   {
     id: '1',
+    loanNumber: 'AC-2401-A1B2',
     referenceNumber: 'AC-2401-A1B2',
     borrower: { id: '1', fullName: 'Juan Pérez' } as Loan['borrower'],
     property: { id: '1' } as Loan['property'],
@@ -55,11 +56,13 @@ const mockRecentLoans: Loan[] = [
     interestRate: 0.10,
     ltv: 0.35,
     status: 'Active',
+    startDate: '2024-01-15T10:00:00Z',
     createdAt: '2024-01-15T10:00:00Z',
     updatedAt: '2024-01-15T10:00:00Z',
   },
   {
     id: '2',
+    loanNumber: 'AC-2401-C3D4',
     referenceNumber: 'AC-2401-C3D4',
     borrower: { id: '2', fullName: 'María García' } as Loan['borrower'],
     property: { id: '2' } as Loan['property'],
@@ -69,6 +72,7 @@ const mockRecentLoans: Loan[] = [
     interestRate: 0.08,
     ltv: 0.28,
     status: 'UnderReview',
+    startDate: '2024-01-14T10:00:00Z',
     createdAt: '2024-01-14T10:00:00Z',
     updatedAt: '2024-01-14T10:00:00Z',
   },

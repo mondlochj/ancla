@@ -4,131 +4,152 @@ Authentication API endpoints.
 Provides JWT-based authentication for the React frontend.
 """
 
+from datetime import datetime
 from flask import request, jsonify
+from flask_jwt_extended import (
+    create_access_token,
+    create_refresh_token,
+    jwt_required,
+    get_jwt_identity,
+    get_jwt,
+)
+from marshmallow import ValidationError
+
 from . import api_bp
+from app.extensions import db, bcrypt
+from app.models import User, Role
+from app.schemas import UserSchema, LoginSchema, RegisterSchema, AuthResponseSchema
+
+
+user_schema = UserSchema()
 
 
 @api_bp.route('/auth/login', methods=['POST'])
 def login():
-    """
-    Authenticate user and return JWT tokens.
+    """Authenticate user and return JWT tokens."""
+    try:
+        data = LoginSchema().load(request.get_json())
+    except ValidationError as err:
+        return jsonify({'message': 'Validation error', 'errors': err.messages}), 400
 
-    Request body:
-        {
-            "email": "user@example.com",
-            "password": "password123",
-            "rememberMe": false
-        }
+    user = User.query.filter_by(email=data['email'].lower()).first()
 
-    Response:
-        {
-            "user": { ... },
-            "accessToken": "jwt...",
-            "refreshToken": "jwt..."
-        }
-    """
-    # TODO: Implement JWT authentication
-    # For now, return a placeholder response
+    if not user or not bcrypt.check_password_hash(user.password_hash, data['password']):
+        return jsonify({'message': 'Invalid email or password'}), 401
+
+    # Update last login
+    user.last_login = datetime.utcnow()
+    db.session.commit()
+
+    # Create tokens
+    access_token = create_access_token(identity=str(user.id))
+    refresh_token = create_refresh_token(identity=str(user.id))
+
     return jsonify({
-        "message": "Login endpoint - implementation pending",
-        "note": "This endpoint will be implemented with Flask-JWT-Extended"
-    }), 501
+        'user': user_schema.dump(user),
+        'accessToken': access_token,
+        'refreshToken': refresh_token,
+    }), 200
 
 
 @api_bp.route('/auth/register', methods=['POST'])
 def register():
-    """
-    Register a new user account.
+    """Register a new user account."""
+    try:
+        json_data = request.get_json()
+        # Add password to context for validation
+        schema = RegisterSchema()
+        schema.context = {'password': json_data.get('password')}
+        data = schema.load(json_data)
+    except ValidationError as err:
+        return jsonify({'message': 'Validation error', 'errors': err.messages}), 400
 
-    Request body:
-        {
-            "email": "user@example.com",
-            "fullName": "User Name",
-            "password": "password123",
-            "confirmPassword": "password123"
-        }
-    """
+    # Check if email exists
+    if User.query.filter_by(email=data['email'].lower()).first():
+        return jsonify({'message': 'Email already registered'}), 409
+
+    # Get borrower role for new users
+    borrower_role = Role.query.filter_by(name='Borrower').first()
+    if not borrower_role:
+        return jsonify({'message': 'System configuration error'}), 500
+
+    # Create user
+    user = User(
+        email=data['email'].lower(),
+        full_name=data['fullName'],
+        password_hash=bcrypt.generate_password_hash(data['password']).decode('utf-8'),
+        role_id=borrower_role.id,
+        is_verified=False,
+    )
+    db.session.add(user)
+    db.session.commit()
+
+    # Create tokens
+    access_token = create_access_token(identity=str(user.id))
+    refresh_token = create_refresh_token(identity=str(user.id))
+
     return jsonify({
-        "message": "Register endpoint - implementation pending"
-    }), 501
+        'user': user_schema.dump(user),
+        'accessToken': access_token,
+        'refreshToken': refresh_token,
+    }), 201
 
 
 @api_bp.route('/auth/refresh', methods=['POST'])
+@jwt_required(refresh=True)
 def refresh_token():
-    """
-    Refresh the access token using a valid refresh token.
+    """Refresh the access token using a valid refresh token."""
+    identity = get_jwt_identity()
+    access_token = create_access_token(identity=identity)
 
-    Request body:
-        {
-            "refreshToken": "jwt..."
-        }
-
-    Response:
-        {
-            "accessToken": "jwt..."
-        }
-    """
-    return jsonify({
-        "message": "Refresh token endpoint - implementation pending"
-    }), 501
+    return jsonify({'accessToken': access_token}), 200
 
 
 @api_bp.route('/auth/logout', methods=['POST'])
+@jwt_required(optional=True)
 def logout():
-    """
-    Invalidate the current tokens.
-    """
-    return jsonify({
-        "message": "Logged out successfully"
-    }), 200
+    """Invalidate the current tokens."""
+    # In a production app, you'd add the token to a blocklist
+    return jsonify({'message': 'Logged out successfully'}), 200
 
 
 @api_bp.route('/auth/me', methods=['GET'])
+@jwt_required()
 def get_current_user():
-    """
-    Get the currently authenticated user's profile.
+    """Get the currently authenticated user's profile."""
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
 
-    Response:
-        {
-            "id": "uuid",
-            "email": "user@example.com",
-            "fullName": "User Name",
-            "role": { ... },
-            "isVerified": true,
-            "createdAt": "2024-01-01T00:00:00Z"
-        }
-    """
-    return jsonify({
-        "message": "Get current user endpoint - implementation pending"
-    }), 501
+    if not user:
+        return jsonify({'message': 'User not found'}), 404
+
+    return jsonify(user_schema.dump(user)), 200
 
 
 @api_bp.route('/auth/forgot-password', methods=['POST'])
 def forgot_password():
-    """
-    Request a password reset email.
+    """Request a password reset email."""
+    data = request.get_json()
+    email = data.get('email', '').lower()
 
-    Request body:
-        {
-            "email": "user@example.com"
-        }
-    """
-    return jsonify({
-        "message": "Password reset email sent"
-    }), 200
+    # Always return success to prevent email enumeration
+    user = User.query.filter_by(email=email).first()
+    if user:
+        # TODO: Generate reset token and send email
+        pass
+
+    return jsonify({'message': 'If an account exists, a reset email has been sent'}), 200
 
 
 @api_bp.route('/auth/reset-password', methods=['POST'])
 def reset_password():
-    """
-    Reset password using a valid reset token.
+    """Reset password using a valid reset token."""
+    data = request.get_json()
+    token = data.get('token')
+    password = data.get('password')
 
-    Request body:
-        {
-            "token": "reset-token",
-            "password": "newpassword123"
-        }
-    """
-    return jsonify({
-        "message": "Reset password endpoint - implementation pending"
-    }), 501
+    if not token or not password:
+        return jsonify({'message': 'Token and password are required'}), 400
+
+    # TODO: Validate token and reset password
+    return jsonify({'message': 'Password reset functionality coming soon'}), 501

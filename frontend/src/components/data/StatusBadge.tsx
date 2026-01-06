@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { Badge } from '@/components/ui';
 import { LOAN_STATUSES, VERIFICATION_STATUSES, RISK_TIERS } from '@/lib/constants';
 

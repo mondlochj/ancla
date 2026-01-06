@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import { X, CheckCircle, AlertTriangle, XCircle, Info } from 'lucide-react';
 
 export interface AlertProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: 'success' | 'warning' | 'danger' | 'info';
+  variant?: 'success' | 'warning' | 'danger' | 'info' | 'error';
   title?: string;
   dismissible?: boolean;
   onDismiss?: () => void;
@@ -13,6 +13,7 @@ const variantStyles = {
   success: 'bg-success-light text-success-dark border-green-300',
   warning: 'bg-warning-light text-warning-dark border-amber-300',
   danger: 'bg-danger-light text-danger-dark border-red-300',
+  error: 'bg-danger-light text-danger-dark border-red-300',
   info: 'bg-info-light text-info-dark border-sky-300',
 };
 
@@ -20,6 +21,7 @@ const iconMap = {
   success: CheckCircle,
   warning: AlertTriangle,
   danger: XCircle,
+  error: XCircle,
   info: Info,
 };
 

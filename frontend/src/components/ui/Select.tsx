@@ -3,15 +3,15 @@ import { cn } from '@/lib/utils';
 import { ChevronDown } from 'lucide-react';
 
 export interface SelectOption {
-  value: string;
-  label: string;
+  readonly value: string;
+  readonly label: string;
 }
 
 export interface SelectProps extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'children'> {
   label?: string;
   error?: string;
   helperText?: string;
-  options: SelectOption[];
+  options: readonly SelectOption[];
   placeholder?: string;
 }
 

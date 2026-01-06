@@ -25,9 +25,9 @@ export function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
     return <Navigate to={ROUTES.LOGIN} state={{ from: location }} replace />;
   }
 
-  if (roles && user && !roles.includes(user.role.name)) {
+  if (roles && user && !roles.includes(user.role)) {
     // Redirect to appropriate home based on role
-    const redirectTo = user.role.name === 'Borrower' ? ROUTES.MY_LOANS : ROUTES.DASHBOARD;
+    const redirectTo = user.role === 'Borrower' ? ROUTES.MY_LOANS : ROUTES.DASHBOARD;
     return <Navigate to={redirectTo} replace />;
   }
 

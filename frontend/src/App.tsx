@@ -9,7 +9,12 @@ import { Spinner } from '@/components/ui';
 // Pages
 import { Login, Register } from '@/pages/auth';
 import { Dashboard } from '@/pages/dashboard';
-import { LoanList, LoanForm } from '@/pages/loans';
+import { LoanList, LoanDetail, LoanForm } from '@/pages/loans';
+import { BorrowerList, BorrowerDetail, BorrowerForm } from '@/pages/borrowers';
+import { PropertyList, PropertyDetail, PropertyForm } from '@/pages/properties';
+import { PaymentList, PaymentRecord, OverduePayments } from '@/pages/payments';
+import { CollectionList, CollectionForm } from '@/pages/collections';
+import { DocumentList } from '@/pages/documents';
 
 // Create React Query client
 const queryClient = new QueryClient({
@@ -55,7 +60,7 @@ function AppRoutes() {
         }
       />
 
-      {/* Protected Routes - Internal Users */}
+      {/* Protected Routes - Dashboard */}
       <Route
         path={ROUTES.DASHBOARD}
         element={
@@ -64,6 +69,8 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+
+      {/* Loans Routes */}
       <Route
         path={ROUTES.LOANS}
         element={
@@ -80,45 +87,141 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/loans/:id"
+        element={
+          <ProtectedRoute roles={INTERNAL_ROLES}>
+            <LoanDetail />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/loans/:id/edit"
+        element={
+          <ProtectedRoute roles={[ROLES.ADMIN, ROLES.CREDIT_OFFICER]}>
+            <LoanForm />
+          </ProtectedRoute>
+        }
+      />
 
-      {/* Placeholder routes for future pages */}
+      {/* Borrowers Routes */}
       <Route
         path={ROUTES.BORROWERS}
         element={
           <ProtectedRoute roles={INTERNAL_ROLES}>
-            <PlaceholderPage title="Prestatarios" />
+            <BorrowerList />
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/borrowers/new"
+        element={
+          <ProtectedRoute roles={[ROLES.ADMIN, ROLES.CREDIT_OFFICER]}>
+            <BorrowerForm />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/borrowers/:id"
+        element={
+          <ProtectedRoute roles={INTERNAL_ROLES}>
+            <BorrowerDetail />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/borrowers/:id/edit"
+        element={
+          <ProtectedRoute roles={[ROLES.ADMIN, ROLES.CREDIT_OFFICER]}>
+            <BorrowerForm />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Properties Routes */}
       <Route
         path={ROUTES.PROPERTIES}
         element={
           <ProtectedRoute roles={INTERNAL_ROLES}>
-            <PlaceholderPage title="Propiedades" />
+            <PropertyList />
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/properties/new"
+        element={
+          <ProtectedRoute roles={[ROLES.ADMIN, ROLES.CREDIT_OFFICER]}>
+            <PropertyForm />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/properties/:id"
+        element={
+          <ProtectedRoute roles={INTERNAL_ROLES}>
+            <PropertyDetail />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/properties/:id/edit"
+        element={
+          <ProtectedRoute roles={[ROLES.ADMIN, ROLES.CREDIT_OFFICER]}>
+            <PropertyForm />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Payments Routes */}
       <Route
         path={ROUTES.PAYMENTS}
         element={
           <ProtectedRoute roles={INTERNAL_ROLES}>
-            <PlaceholderPage title="Pagos" />
+            <PaymentList />
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/payments/new"
+        element={
+          <ProtectedRoute roles={[ROLES.ADMIN, ROLES.CREDIT_OFFICER, ROLES.COLLECTIONS]}>
+            <PaymentRecord />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/payments/overdue"
+        element={
+          <ProtectedRoute roles={INTERNAL_ROLES}>
+            <OverduePayments />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Collections Routes */}
       <Route
         path={ROUTES.COLLECTIONS}
         element={
           <ProtectedRoute roles={[ROLES.ADMIN, ROLES.COLLECTIONS]}>
-            <PlaceholderPage title="Cobros" />
+            <CollectionList />
           </ProtectedRoute>
         }
       />
       <Route
+        path="/collections/new/:loanId"
+        element={
+          <ProtectedRoute roles={[ROLES.ADMIN, ROLES.COLLECTIONS]}>
+            <CollectionForm />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Documents Routes */}
+      <Route
         path={ROUTES.DOCUMENTS}
         element={
           <ProtectedRoute roles={INTERNAL_ROLES}>
-            <PlaceholderPage title="Documentos" />
+            <DocumentList />
           </ProtectedRoute>
         }
       />
@@ -128,7 +231,7 @@ function AppRoutes() {
         path={ROUTES.MY_LOANS}
         element={
           <ProtectedRoute roles={[ROLES.BORROWER]}>
-            <PlaceholderPage title="Mis Préstamos" />
+            <BorrowerPortal />
           </ProtectedRoute>
         }
       />
@@ -148,13 +251,15 @@ function AppRoutes() {
   );
 }
 
-// Placeholder component for pages not yet implemented
-function PlaceholderPage({ title }: { title: string }) {
+// Borrower Portal - simplified view for borrowers
+function BorrowerPortal() {
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-2">{title}</h1>
-        <p className="text-gray-500">Esta página está en desarrollo.</p>
+    <div className="min-h-screen bg-gray-100">
+      <div className="max-w-4xl mx-auto py-8 px-4">
+        <h1 className="text-2xl font-semibold text-gray-900 mb-6">Mis Préstamos</h1>
+        <div className="bg-white rounded-lg shadow p-6">
+          <p className="text-gray-500">Portal del prestatario en desarrollo.</p>
+        </div>
       </div>
     </div>
   );

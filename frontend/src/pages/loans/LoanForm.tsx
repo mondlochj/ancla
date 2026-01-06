@@ -16,7 +16,7 @@ import {
 } from '@/components/ui';
 import { Currency } from '@/components/data';
 import { ROUTES, MIN_LOAN_AMOUNT, MAX_LTV } from '@/lib/constants';
-import { formatCurrency, formatPercentage, calculateMonthlyPayment } from '@/lib/utils';
+import { formatPercentage, calculateMonthlyPayment } from '@/lib/utils';
 import { ArrowLeft, Calculator } from 'lucide-react';
 
 const loanFormSchema = z.object({

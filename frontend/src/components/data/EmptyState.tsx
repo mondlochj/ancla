@@ -7,7 +7,7 @@ export interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
   icon?: React.ReactNode;
   title: string;
   description?: string;
-  action?: {
+  action?: React.ReactNode | {
     label: string;
     onClick: () => void;
   };
@@ -21,6 +21,15 @@ export function EmptyState({
   className,
   ...props
 }: EmptyStateProps) {
+  const renderAction = () => {
+    if (!action) return null;
+    if (React.isValidElement(action)) return action;
+    if (typeof action === 'object' && 'label' in action && 'onClick' in action) {
+      return <Button onClick={action.onClick}>{action.label}</Button>;
+    }
+    return action;
+  };
+
   return (
     <div
       className={cn(
@@ -36,11 +45,7 @@ export function EmptyState({
       {description && (
         <p className="text-sm text-gray-500 max-w-sm mb-4">{description}</p>
       )}
-      {action && (
-        <Button onClick={action.onClick}>
-          {action.label}
-        </Button>
-      )}
+      {renderAction()}
     </div>
   );
 }

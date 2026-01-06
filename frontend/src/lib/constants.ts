@@ -7,6 +7,32 @@ export const GRACE_PERIOD_DAYS = 5;
 export const DEFAULT_TRIGGER_DAYS = 15;
 export const LEGAL_READY_DAYS = 30;
 
+// Guatemala Departments
+export const DEPARTMENTS = [
+  'Guatemala',
+  'El Progreso',
+  'Sacatepéquez',
+  'Chimaltenango',
+  'Escuintla',
+  'Santa Rosa',
+  'Sololá',
+  'Totonicapán',
+  'Quetzaltenango',
+  'Suchitepéquez',
+  'Retalhuleu',
+  'San Marcos',
+  'Huehuetenango',
+  'Quiché',
+  'Baja Verapaz',
+  'Alta Verapaz',
+  'Petén',
+  'Izabal',
+  'Zacapa',
+  'Chiquimula',
+  'Jalapa',
+  'Jutiapa',
+] as const;
+
 // Loan Status Options
 export const LOAN_STATUSES = [
   { value: 'Draft', label: 'Borrador' },
@@ -18,6 +44,8 @@ export const LOAN_STATUSES = [
   { value: 'LegalReady', label: 'Listo para Legal' },
   { value: 'Closed', label: 'Cerrado' },
 ] as const;
+
+export const LOAN_STATUS_OPTIONS = LOAN_STATUSES;
 
 // Risk Tier Options
 export const RISK_TIERS = [
@@ -33,6 +61,20 @@ export const VERIFICATION_STATUSES = [
   { value: 'Rejected', label: 'Rechazado' },
 ] as const;
 
+export const VERIFICATION_STATUS_OPTIONS = VERIFICATION_STATUSES;
+
+// Property Type Options
+export const PROPERTY_TYPES = [
+  { value: 'House', label: 'Casa' },
+  { value: 'Apartment', label: 'Apartamento' },
+  { value: 'Land', label: 'Terreno' },
+  { value: 'Commercial', label: 'Comercial' },
+  { value: 'Industrial', label: 'Industrial' },
+  { value: 'Agricultural', label: 'Agrícola' },
+] as const;
+
+export const PROPERTY_TYPE_OPTIONS = PROPERTY_TYPES;
+
 // Payment Type Options
 export const PAYMENT_TYPES = [
   { value: 'Principal', label: 'Capital' },
@@ -41,12 +83,26 @@ export const PAYMENT_TYPES = [
   { value: 'Other', label: 'Otro' },
 ] as const;
 
+export const PAYMENT_TYPE_OPTIONS = PAYMENT_TYPES;
+
 // Payment Method Options
 export const PAYMENT_METHODS = [
   { value: 'Cash', label: 'Efectivo' },
   { value: 'Transfer', label: 'Transferencia' },
   { value: 'Check', label: 'Cheque' },
 ] as const;
+
+export const PAYMENT_METHOD_OPTIONS = PAYMENT_METHODS;
+
+// Payment Status Options
+export const PAYMENT_STATUSES = [
+  { value: 'Pending', label: 'Pendiente' },
+  { value: 'Paid', label: 'Pagado' },
+  { value: 'Partial', label: 'Parcial' },
+  { value: 'Overdue', label: 'Vencido' },
+] as const;
+
+export const PAYMENT_STATUS_OPTIONS = PAYMENT_STATUSES;
 
 // Document Type Options
 export const DOCUMENT_TYPES = [
@@ -107,7 +163,7 @@ export const API_ENDPOINTS = {
   DASHBOARD: '/api/dashboard',
 } as const;
 
-// Route Paths
+// Route Paths - static routes
 export const ROUTES = {
   HOME: '/',
   LOGIN: '/login',
@@ -115,18 +171,27 @@ export const ROUTES = {
   FORGOT_PASSWORD: '/forgot-password',
   DASHBOARD: '/dashboard',
   LOANS: '/loans',
-  LOAN_DETAIL: '/loans/:id',
-  LOAN_CREATE: '/loans/create',
+  LOAN_CREATE: '/loans/new',
   BORROWERS: '/borrowers',
-  BORROWER_DETAIL: '/borrowers/:id',
-  BORROWER_CREATE: '/borrowers/create',
   PROPERTIES: '/properties',
-  PROPERTY_DETAIL: '/properties/:id',
-  PROPERTY_CREATE: '/properties/create',
   PAYMENTS: '/payments',
-  PAYMENT_RECORD: '/payments/record',
+  PAYMENTS_OVERDUE: '/payments/overdue',
   COLLECTIONS: '/collections',
   DOCUMENTS: '/documents',
   MY_LOANS: '/my-loans',
-  MY_LOAN_DETAIL: '/my-loans/:id',
+  // Dynamic route functions
+  LOAN_DETAIL: (id: string) => `/loans/${id}`,
+  LOAN_EDIT: (id: string) => `/loans/${id}/edit`,
+  LOAN_NEW: '/loans/new',
+  BORROWER_NEW: '/borrowers/new',
+  BORROWER_DETAIL: (id: string) => `/borrowers/${id}`,
+  BORROWER_EDIT: (id: string) => `/borrowers/${id}/edit`,
+  PROPERTY_NEW: '/properties/new',
+  PROPERTY_DETAIL: (id: string) => `/properties/${id}`,
+  PROPERTY_EDIT: (id: string) => `/properties/${id}/edit`,
+  PAYMENT_NEW: '/payments/new',
+  PAYMENT_DETAIL: (id: string) => `/payments/${id}`,
+  COLLECTION_DETAIL: (id: string) => `/collections/${id}`,
+  COLLECTION_NEW: (loanId: string) => `/collections/new/${loanId}`,
+  DOCUMENT_NEW: '/documents/new',
 } as const;

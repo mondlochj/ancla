@@ -13,6 +13,7 @@ import { Plus, Search } from 'lucide-react';
 const mockLoans: Loan[] = [
   {
     id: '1',
+    loanNumber: 'AC-2401-A1B2',
     referenceNumber: 'AC-2401-A1B2',
     borrower: { id: '1', fullName: 'Juan Pérez', dpi: '1234567890101' } as Loan['borrower'],
     property: { id: '1', address: 'Zona 10, Guatemala' } as Loan['property'],
@@ -22,11 +23,13 @@ const mockLoans: Loan[] = [
     interestRate: 0.10,
     ltv: 0.35,
     status: 'Active',
+    startDate: '2024-01-15T10:00:00Z',
     createdAt: '2024-01-15T10:00:00Z',
     updatedAt: '2024-01-15T10:00:00Z',
   },
   {
     id: '2',
+    loanNumber: 'AC-2401-C3D4',
     referenceNumber: 'AC-2401-C3D4',
     borrower: { id: '2', fullName: 'María García', dpi: '9876543210101' } as Loan['borrower'],
     property: { id: '2', address: 'Antigua Guatemala' } as Loan['property'],
@@ -36,11 +39,13 @@ const mockLoans: Loan[] = [
     interestRate: 0.08,
     ltv: 0.28,
     status: 'UnderReview',
+    startDate: '2024-01-14T10:00:00Z',
     createdAt: '2024-01-14T10:00:00Z',
     updatedAt: '2024-01-14T10:00:00Z',
   },
   {
     id: '3',
+    loanNumber: 'AC-2401-E5F6',
     referenceNumber: 'AC-2401-E5F6',
     borrower: { id: '3', fullName: 'Carlos López', dpi: '5555555550101' } as Loan['borrower'],
     property: { id: '3', address: 'Escuintla' } as Loan['property'],
@@ -50,6 +55,7 @@ const mockLoans: Loan[] = [
     interestRate: 0.12,
     ltv: 0.40,
     status: 'Approved',
+    startDate: '2024-01-13T10:00:00Z',
     createdAt: '2024-01-13T10:00:00Z',
     updatedAt: '2024-01-13T10:00:00Z',
   },

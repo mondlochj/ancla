@@ -1,2 +1,3 @@
-export { LoanList } from './LoanList';
-export { LoanForm } from './LoanForm';
+export { default as LoanList } from './LoanList';
+export { default as LoanDetail } from './LoanDetail';
+export { default as LoanForm } from './LoanForm';
